@@ -3,6 +3,6 @@
 
 #include "common.h"
 
-void draw(char* board, unsigned long long selection);
+void draw(char* board, unsigned long long selection, int reversed);
 
 #endif

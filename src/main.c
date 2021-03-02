@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     int pos, npos = -1;
     while (1) {
         selection = 0;
-        if (!test) draw(cpos.board, 0);
+        if (!test) draw(cpos.board, 0, cpos.turn);
 
         if (npos == -1) {
             if (checkMate(&cpos)) {
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 
         selection = possMoves(pos, &cpos);
         if (test) fprintf(outTest, "%llu\n", selection);
-        if (!test) draw(cpos.board, selection);
+        if (!test) draw(cpos.board, selection, cpos.turn);
 
         readCoord(&npos);
         if (npos == 64) break;
