@@ -13,15 +13,6 @@ static const char LETTERS[7] = {
     [P] = 'p',
 };
 
-static const char INVLETTERS[26] = {
-    ['k' - 'a'] = K,
-    ['q' - 'a'] = Q,
-    ['r' - 'a'] = R,
-    ['b' - 'a'] = B,
-    ['n' - 'a'] = N,
-    ['p' - 'a'] = P,
-};
-
 void getFEN(struct DataPos* pos, char* FEN) {
     int s = 0, empty = 0;
     for (int i = 0; i < 64; ++i) {

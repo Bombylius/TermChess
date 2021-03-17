@@ -50,7 +50,7 @@ char checkCheck(int pos, int col, char* board) {
     return 0;
 }
 
-void move(int from, int to, struct DataPos* b) {
+void move(int from, int to, struct DataPos* b, int prom) {
     int y = from >> 3, x = from & MOD8, type = b->board[from] & MOD8, tmp;
     if (b->board[from] & C) ++b->movec;
     if (b->board[to]) b->rule50 = -1;
@@ -64,22 +64,7 @@ void move(int from, int to, struct DataPos* b) {
         }
         else b->enpas = -1;
         if ((tmp = (to & MOD8) - x) && !b->board[to]) b->board[from + tmp] = 0;
-        else if ((y == (b->turn ? 6 : 1))) {
-            char c;
-            do {
-                printf("What do you want to transform into? [q/r/b/n]\n");
-                scanf(" %c", &c);
-                //if (!nolog) fprintf(inTest, "%c ", c);
-                switch (c) {
-                case 'q': c = Q; break;
-                case 'r': c = R; break;
-                case 'b': c = B; break;
-                case 'n': c = N; break;
-                default: c = 0;
-                }
-            } while (!c);
-            b->board[from] = (b->board[from] & IMOD8) | c;
-        }
+        else if ((y == (b->turn ? 6 : 1))) b->board[from] = (b->board[from] & IMOD8) | prom;
         break;
     case K:
         b->kPos[!!b->turn] = to;
