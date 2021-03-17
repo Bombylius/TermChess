@@ -7,8 +7,8 @@
 static const char IMOD8   = 0170;
 #define IN(x) (0 <= x && x < 64)
 #define INL(x) (0 <= x && x < 8)
-#define CANGO(x, c) ((board->board[npos = x] & C) != c || !board->board[npos])
-#define CANG(x, c) ((board->board[x] & C) != c || !board->board[x])
+#define CANGO(x, c) ((b->board[npos = x] & C) != c || !b->board[npos])
+#define CANG(x, c) ((b->board[x] & C) != c || !b->board[x])
 #define MIN(a, b) (a < b ? a : b)
 #define SEL(x) selection |= (1ULL << (x))
 #define SSEL(x) selection ^= (1ULL << (x))
@@ -50,48 +50,52 @@ char checkCheck(int pos, int col, char* board) {
     return 0;
 }
 
-void move(int from, int to, struct DataPos* board) {
-    int y = from >> 3, x = from & MOD8, type = board->board[from] & MOD8, tmp;
+void move(int from, int to, struct DataPos* b) {
+    int y = from >> 3, x = from & MOD8, type = b->board[from] & MOD8, tmp;
+    if (b->board[from] & C) ++b->movec;
+    if (b->board[to]) b->rule50 = -1;
 
     switch (type) {
     case P:
+        b->rule50 = -1;
         if (abs(to - from) == 16) {
-            board->enpas = to;
+            b->enpas = (to + from) >> 1;
             break;
         }
-        else board->enpas = -1;
-        if ((tmp = (to & MOD8) - x) && !board->board[to]) board->board[from + tmp] = 0;
-        else if ((y == (board->turn ? 6 : 1))) {
+        else b->enpas = -1;
+        if ((tmp = (to & MOD8) - x) && !b->board[to]) b->board[from + tmp] = 0;
+        else if ((y == (b->turn ? 6 : 1))) {
             char c;
             do {
-                printf("What do you want to transform into? [Q/R/B/N]\n");
+                printf("What do you want to transform into? [q/r/b/n]\n");
                 scanf(" %c", &c);
                 //if (!nolog) fprintf(inTest, "%c ", c);
                 switch (c) {
-                case 'Q': c = Q; break;
-                case 'R': c = R; break;
-                case 'B': c = B; break;
-                case 'N': c = N; break;
+                case 'q': c = Q; break;
+                case 'r': c = R; break;
+                case 'b': c = B; break;
+                case 'n': c = N; break;
                 default: c = 0;
                 }
             } while (!c);
-            board->board[from] = (board->board[from] & IMOD8) | c;
+            b->board[from] = (b->board[from] & IMOD8) | c;
         }
         break;
     case K:
-        board->kPos[!!board->turn] = to;
-        board->castl[!!board->turn][0] = board->castl[!!board->turn][1] = 0;
+        b->kPos[!!b->turn] = to;
+        b->castl[!!b->turn][0] = b->castl[!!b->turn][1] = 0;
         if (abs(tmp = to - from) == 2) {
-            if (tmp > 0) board->board[to - 1] = board->board[y * 8 + 7], board->board[y * 8 + 7] = 0;
-            else board->board[to + 1] = board->board[y * 8], board->board[y * 8] = 0;
+            if (tmp > 0) b->board[to - 1] = b->board[y * 8 + 7], b->board[y * 8 + 7] = 0;
+            else b->board[to + 1] = b->board[y * 8], b->board[y * 8] = 0;
         }
         break;
     case R:
-        if (!x || x == 7) board->castl[!!board->turn][!!x] = 0;
+        if (!x || x == 7) b->castl[!!b->turn][!!x] = 0;
     }
-    if (type != P) board->enpas = -1;
-    board->board[to] = board->board[from];
-    board->board[from] = 0;
+    if (type != P) b->enpas = -1;
+    b->board[to] = b->board[from];
+    b->board[from] = 0;
+    ++b->rule50;
 }
 
 char aux[64];
@@ -109,32 +113,32 @@ char check(int pos, int from, int to, char* board) {
 }
 
 #define EXP {\
-    if (board->board[npos]) {\
-        if ((board->board[npos] & C) != board->turn)\
+    if (b->board[npos]) {\
+        if ((b->board[npos] & C) != b->turn)\
             SEL(npos);\
         break;\
     }\
     SEL(npos);\
 }
 
-unsigned long long possMoves(int pos, struct DataPos* board) {
+unsigned long long possMoves(int pos, struct DataPos* b) {
     int x = pos & MOD8, y = pos >> 3, npos, sid, type, tmp;
     unsigned long long selection = 0;
-    switch (type = board->board[pos] & MOD8) {
+    switch (type = b->board[pos] & MOD8) {
     case K:
-        for (int a = -1; a <= 1; ++a) for (int b = -1; b <= 1; ++b)
-            if (INL(x + a) && INL(y + b) && a | b && CANGO(pos + b * 8 + a, board->turn)) SEL(npos);
+        for (int a = -1; a <= 1; ++a) for (int bb = -1; bb <= 1; ++bb)
+            if (INL(x + a) && INL(y + bb) && a | bb && CANGO(pos + bb * 8 + a, b->turn)) SEL(npos);
 
         for (int j = 0; j <= 1; ++j) {
             sid = (j ? -1 : 1);
-            if (board->castl[!!board->turn][!j] && board->board[pos + (3 + j) * sid] == (R | board->turn)) {
+            if (b->castl[!!b->turn][!j] && b->board[pos + (3 + j) * sid] == (R | b->turn)) {
                 tmp = 1;
-                for (int i = 1; i < 3 + j; ++i) if (board->board[pos + i * sid]) {
+                for (int i = 1; i < 3 + j; ++i) if (b->board[pos + i * sid]) {
                     tmp = 0;
                     break;
                 }
                 if (tmp) {
-                    for (int i = 0; i < 3; ++i) if (checkCheck(pos + i * sid, board->turn, board->board)) {
+                    for (int i = 0; i < 3; ++i) if (checkCheck(pos + i * sid, b->turn, b->board)) {
                         tmp = 0;
                         break;
                     }
@@ -161,28 +165,29 @@ unsigned long long possMoves(int pos, struct DataPos* board) {
         break;
     case N:
         for (int i = -1; i <= 1; i += 2) for (int j = -2; j <= 2; j += 4) {
-            if (INL(x + i) && INL(y + j) && CANGO(pos + j * 8 + i, board->turn)) SEL(npos);
-            if (INL(x + j) && INL(y + i) && CANGO(pos + i * 8 + j, board->turn)) SEL(npos);
+            if (INL(x + i) && INL(y + j) && CANGO(pos + j * 8 + i, b->turn)) SEL(npos);
+            if (INL(x + j) && INL(y + i) && CANGO(pos + i * 8 + j, b->turn)) SEL(npos);
         }
         break;
     case P:
-        sid = (board->turn ? 1 : -1);
-        if (!board->board[npos = pos + 8 * sid]) {
+        sid = (b->turn ? 1 : -1);
+        if (!b->board[npos = pos + 8 * sid]) {
             SEL(npos);
-            if (y == (board->turn ? 1 : 6) && !board->board[npos = pos + 16 * sid]) SEL(npos);
+            if (y == (b->turn ? 1 : 6) && !b->board[npos = pos + 16 * sid]) SEL(npos);
         }
         npos = pos - 1 + sid * 8;
-        if (x && ((pos - 1 == board->enpas && board->board[pos - 1] && (board->board[pos - 1] & C) != board->turn) ||
-                    (board->board[npos] && (board->board[npos] & C) != board->turn))) SEL(npos);
+        if (x && ((npos == b->enpas && (b->board[pos - 1] & C) != b->turn) ||
+                 (b->board[npos] && (b->board[npos] & C) != b->turn))) SEL(npos);
         npos += 2;
-        if (x != 7 && ((pos + 1 == board->enpas && board->board[pos + 1] && (board->board[pos + 1] & C) != board->turn) ||
-                    (board->board[npos] && (board->board[npos] & C) != board->turn))) SEL(npos);
+        if (x != 7 && ((npos == b->enpas && (b->board[pos + 1] & C) != b->turn) ||
+                      (b->board[npos] && (b->board[npos] & C) != b->turn))) SEL(npos);
     }
-    for (int i = 0; i < 64; ++i) if (ISSEL(i) && check(type == K ? i : board->kPos[!!board->turn], pos, i, board->board)) SSEL(i);
+    for (int i = 0; i < 64; ++i)
+        if (ISSEL(i) && check(type == K ? i : b->kPos[!!b->turn], pos, i, b->board)) SSEL(i);
     return selection;
 }
 
-char checkMate(struct DataPos* board) {
-    for (int i = 0; i < 64; ++i) if ((board->board[i] & C) == board->turn && possMoves(i, board)) return 0;
+char checkMate(struct DataPos* b) {
+    for (int i = 0; i < 64; ++i) if ((b->board[i] & C) == b->turn && possMoves(i, b)) return 0;
     return 1;
 }

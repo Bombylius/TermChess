@@ -1,20 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <getopt.h>
 #include "common.h"
+#include "FEN.h"
 #include "chess.h"
 #include "draw.h"
 
 FILE *inTest, *outTest;
-int test, nolog;
+int test, nolog, reverse, custart;
 
-struct DataPos cpos = {
-.board = {
-    [0]  = R|C, N|C, B|C, Q|C, K|C, B|C, N|C, R|C,
-    [8]  = P|C, P|C, P|C, P|C, P|C, P|C, P|C, P|C,
-    [48] = P, P, P, P, P, P, P, P,
-    [56] = R, N, B, Q, K, B, N, R},
-.enpas = -1, .kPos = {60, 4}, .castl = {{1, 1}, {1, 1}}, .turn = 0};
+struct DataPos cpos;
 
 void readCoord(int* c) {
     char a, b;
@@ -26,26 +21,52 @@ void readCoord(int* c) {
 }
 
 int main(int argc, char** argv) {
-    if (argc > 1) {
-        if (!strcmp(argv[1], "test")) {
+    int opt;
+    while ((opt = getopt(argc, argv, "rtqhs:")) != -1) {
+        switch (opt) {
+        case 'r':
+            reverse = C;
+            break;
+        case 't':
             test = 1;
             outTest = fopen("test.out", "w");
+            break;
+        case 'q':
+            nolog = 1;
+            break;
+        case 's':
+            loadFEN(optarg, &cpos);
+            custart = 1;
+            break;
+        case 'h':
+        default:
+            puts("usage: chess [options]\n"
+                 "\th - show this message\n"
+                 "\tr - reverse the chessboard after each move\n"
+                 "\tt - output current selections to test.out and don't print boards\n"
+                 "\tq - don't write input to test.in\n"
+                 "\ts <FEN> - start from a different position");
+            return EXIT_FAILURE;
         }
-        else if (!strcmp(argv[1], "nolog")) nolog = 1;
     }
     if (!nolog) inTest = fopen("test.in", "w");
     if (!test) printf("\033[2J");
+    if (!custart) loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", &cpos);
 
     unsigned long long selection;
     int pos, npos = -1;
     while (1) {
         selection = 0;
-        if (!test) draw(cpos.board, 0, cpos.turn);
+        if (!test) draw(cpos.board, 0, cpos.turn & reverse);
 
         if (npos == -1) {
             if (checkMate(&cpos)) {
                 if (checkCheck(cpos.kPos[!!cpos.turn], cpos.turn, cpos.board)) printf("%s HAS WON!\n", (cpos.turn ? "WHITE" : "BLACK"));
-                else printf("STALEMATE!\n");
+                else puts("STALEMATE!");
+                break;
+            }
+            if (cpos.rule50 == 100) {
+                puts("DRAW BY 50 MOVE RULE");
                 break;
             }
             readCoord(&pos);
@@ -58,7 +79,7 @@ int main(int argc, char** argv) {
 
         selection = possMoves(pos, &cpos);
         if (test) fprintf(outTest, "%llu\n", selection);
-        if (!test) draw(cpos.board, selection, cpos.turn);
+        if (!test) draw(cpos.board, selection, cpos.turn & reverse);
 
         readCoord(&npos);
         if (npos == 64) break;
@@ -71,5 +92,7 @@ int main(int argc, char** argv) {
         cpos.turn ^= C;
         npos = -1;
     }
-    if (test) for (char *c = cpos.board; c != cpos.board + 64; ++c) fprintf(outTest, "%c", *c);
+    char FEN[80];
+    getFEN(&cpos, FEN);
+    if (test) fprintf(outTest, "%s\n", FEN);
 }
