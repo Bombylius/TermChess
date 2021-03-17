@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     if (!custart) loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", &cpos);
 
     unsigned long long selection = 0;
-    int pos = -1, npos, q = 0;
+    int pos = -1, npos, q = 0, drawOffered = 0, drawToClaim = 0;
     char prom;
     while (1) {
         if (!test) draw(cpos.board, selection, cpos.turn & reverse);
@@ -65,8 +65,10 @@ int main(int argc, char** argv) {
                 q = 1;
                 break;
             case 'o':
+                drawOffered = 1;
                 break;
             case 'c':
+                if (drawOffered || drawToClaim) puts("DRAW"), q = 1;
                 break;
             case 'h':
             default:
@@ -82,7 +84,7 @@ int main(int argc, char** argv) {
         if (ISSEL(npos)) {
             if ((cpos.board[pos] & MOD8) == P && (npos >> 3) == (cpos.turn ? 7 : 0)) {
                 scanf(" %c", &prom);
-                fprintf(inTest, "%c ", prom);
+                if (!nolog) fprintf(inTest, "%c ", prom);
                 prom = INVLETTERS[prom - 'a'];
                 if (!prom) continue;
             }
@@ -93,10 +95,14 @@ int main(int argc, char** argv) {
                 else puts("STALEMATE!");
                 break;
             }
-            if (cpos.rule50 == 100) {
-                puts("DRAW BY 50 MOVE RULE");
+            if (cpos.rule50 == 150) {
+                puts("DRAW");
                 break;
             }
+            if (cpos.rule50 >= 100) drawToClaim = 1;
+            else drawToClaim = 0;
+            drawOffered = 0;
+
             cpos.turn ^= C;
             selection = 0;
         } else if (cpos.board[npos] && (cpos.board[npos] & C) == cpos.turn) {
