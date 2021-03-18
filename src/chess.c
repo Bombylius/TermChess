@@ -50,7 +50,7 @@ char checkCheck(int pos, int col, char* board) {
     return 0;
 }
 
-void move(int from, int to, struct DataPos* b, int prom) {
+void move(int from, int to, struct DataPos* b, char prom) {
     int y = from >> 3, x = from & MOD8, type = b->board[from] & MOD8, tmp;
     if (b->board[from] & C) ++b->movec;
     if (b->board[to]) b->rule50 = -1;
@@ -83,18 +83,18 @@ void move(int from, int to, struct DataPos* b, int prom) {
     ++b->rule50;
 }
 
-char aux[64];
+// We don't have to simulate the exact moves, because you can't get checked from behind the rook when castling
+// or from behind the captured pawn when capturing en passant
 char check(int pos, int from, int to, char* board) {
-    memcpy(aux, board, 64);
+    char beat = board[to];
+    board[to] = board[from];
+    board[from] = 0;
 
-    int tmp = aux[to];
-    aux[to] = aux[from];
-    aux[from] = 0;
+    char res = checkCheck(pos, board[to] & C, board);
 
-    int x = pos & MOD8, type = (aux[to] & MOD8);
-    if (type == P && !tmp && (tmp = (to & MOD8) - x)) aux[pos + tmp] = 0;
-
-    return checkCheck(pos, aux[to] & C, aux);
+    board[from] = board[to];
+    board[to] = beat;
+    return res;
 }
 
 #define EXP {\

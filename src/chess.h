@@ -20,6 +20,6 @@ char checkCheck(int pos, int col, char* board);
 char check(int pos, int from, int to, char* board);
 unsigned long long possMoves(int pos, struct DataPos* b);
 char checkMate(struct DataPos* b);
-void move(int from, int to, struct DataPos* b, int prom);
+void move(int from, int to, struct DataPos* b, char prom);
 
 #endif
