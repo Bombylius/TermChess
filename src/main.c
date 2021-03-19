@@ -60,10 +60,11 @@ int main(int argc, char** argv) {
     if (!custart) loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", &cpos);
 
     unsigned long long selection = 0;
-    int pos = -1, npos, q = 0, drawOffered = 0, drawToClaim = 0;
+    int pos = -1, npos, q = 0, drawOffered = 0, drawToClaim = 0, redraw = 1;
     char prom;
     while (1) {
-        if (!test) draw(cpos.board, selection, cpos.turn & reverse);
+        if (!test && redraw) draw(cpos.board, selection, cpos.turn & reverse);
+        redraw = 1;
         if (waittime.tv_nsec) nanosleep(&waittime, NULL);
         readTerm(&npos);
         if (npos == 64) {
@@ -79,16 +80,16 @@ int main(int argc, char** argv) {
                 break;
             case 'h':
             default:
-                puts("commands\n"
+                puts("commands:\n"
                      "\t.q - quit\n"
                      "\t.o - offer draw\n"
                      "\t.c - claim draw\n"
-                     "\t.h - display this message\n");
+                     "\t.h - display this message");
+                redraw = 0;
             }
             if (q) break;
             continue;
-        }
-        if (ISSEL(npos)) {
+        } else if (ISSEL(npos)) {
             if ((cpos.board[pos] & MOD8) == P && (npos >> 3) == (cpos.turn ? 7 : 0)) {
                 scanf(" %c", &prom);
                 if (!nolog) fprintf(inTest, "%c ", prom);
