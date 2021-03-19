@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
         } else selection = 0;
     }
 
-    char FEN[80];
+    char FEN[90];
     getFEN(&cpos, FEN);
     if (!nolog) fputc('\n', inTest);
     if (test) fprintf(outTest, "%s\n", FEN);
