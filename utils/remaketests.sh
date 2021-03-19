@@ -1,8 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
-LAST=$(ls tests | tail -n1)
-COUNT=${LAST:0:1}
-for ((i=0;i<=$COUNT;i+=1)); do
-    ./chess -qt < tests/$i.in > /dev/null
-    mv test.out tests/$i.out
+for i in tests/*.in; do
+    ./chess -qt < $i > /dev/null
+    mv test.out ${i%.in}.out
 done

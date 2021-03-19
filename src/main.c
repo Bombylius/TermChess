@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <time.h>
 #include "common.h"
 #include "FEN.h"
 #include "chess.h"
@@ -8,6 +9,7 @@
 
 FILE *inTest, *outTest;
 int test, nolog, reverse, custart;
+struct timespec waittime = {.tv_sec = 0};
 struct DataPos cpos;
 
 char command;
@@ -22,7 +24,7 @@ void readTerm(int* c) {
 
 int main(int argc, char** argv) {
     int opt;
-    while ((opt = getopt(argc, argv, "rtqhs:")) != -1) {
+    while ((opt = getopt(argc, argv, "rtqhs:w:")) != -1) {
         switch (opt) {
         case 'r':
             reverse = C;
@@ -30,13 +32,16 @@ int main(int argc, char** argv) {
         case 't':
             test = 1;
             outTest = fopen("test.out", "w");
-            break;
+            __attribute__ ((fallthrough)); // suppresing gcc warning
         case 'q':
             nolog = 1;
             break;
         case 's':
             loadFEN(optarg, &cpos);
             custart = 1;
+            break;
+        case 'w':
+            waittime.tv_nsec = atoi(optarg) * 1000000;
             break;
         case 'h':
         default:
@@ -45,6 +50,7 @@ int main(int argc, char** argv) {
                  "\tr - reverse the chessboard after each move\n"
                  "\tt - output current selections to test.out and don't print boards\n"
                  "\tq - don't write input to test.in\n"
+                 "\tw <msecs> - wait msecs miliseconds after each input\n"
                  "\ts <FEN> - start from a different position");
             return EXIT_FAILURE;
         }
@@ -58,6 +64,7 @@ int main(int argc, char** argv) {
     char prom;
     while (1) {
         if (!test) draw(cpos.board, selection, cpos.turn & reverse);
+        if (waittime.tv_nsec) nanosleep(&waittime, NULL);
         readTerm(&npos);
         if (npos == 64) {
             switch (command) {
@@ -86,7 +93,10 @@ int main(int argc, char** argv) {
                 scanf(" %c", &prom);
                 if (!nolog) fprintf(inTest, "%c ", prom);
                 prom = INVLETTERS[prom - 'a'];
-                if (!prom) continue;
+                if (!prom) {
+                    selection = 0;
+                    continue;
+                }
             }
             move(pos, npos, &cpos, prom);
             if (checkMate(&cpos)) {

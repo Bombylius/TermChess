@@ -1,4 +1,4 @@
-CFLAGS = -std=c99 -Wall -Wshadow -Wextra -Wconversion -pedantic
+CFLAGS = -std=gnu99 -Wall -Wshadow -Wextra -Wconversion -pedantic
 
 SRC = main.c chess.c draw.c FEN.c
 OBJ := $(SRC:.c=.o)

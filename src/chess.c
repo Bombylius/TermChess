@@ -55,6 +55,8 @@ void move(int from, int to, struct DataPos* b, char prom) {
     if (b->board[from] & C) ++b->movec;
     if (b->board[to]) b->rule50 = -1;
 
+    if (to == 0 || to == 7 || to == 56 || to == 63) b->castl[!(to >> 3)][!!(to & MOD8)] = 0;
+
     switch (type) {
     case P:
         b->rule50 = -1;
@@ -75,7 +77,7 @@ void move(int from, int to, struct DataPos* b, char prom) {
         }
         break;
     case R:
-        if (!x || x == 7) b->castl[!!b->turn][!!x] = 0;
+        if ((!x || x == 7) && y == (b->board[from] & C ? 0 : 7)) b->castl[!!b->turn][!!x] = 0;
     }
     if (type != P) b->enpas = -1;
     b->board[to] = b->board[from];
@@ -84,7 +86,7 @@ void move(int from, int to, struct DataPos* b, char prom) {
 }
 
 // We don't have to simulate the exact moves, because you can't get checked from behind the rook when castling
-// or from behind the captured pawn when capturing en passant
+// from behind the captured pawn when capturing en passant and it doesn't matter what you promote your pawn into
 char check(int pos, int from, int to, char* board) {
     char beat = board[to];
     board[to] = board[from];
@@ -116,7 +118,7 @@ unsigned long long possMoves(int pos, struct DataPos* b) {
 
         for (int j = 0; j <= 1; ++j) {
             sid = (j ? -1 : 1);
-            if (b->castl[!!b->turn][!j] && b->board[pos + (3 + j) * sid] == (R | b->turn)) {
+            if (b->castl[!!b->turn][!j] && b->board[pos + (3 + j) * sid] == (R | b->turn)) { //xd
                 tmp = 1;
                 for (int i = 1; i < 3 + j; ++i) if (b->board[pos + i * sid]) {
                     tmp = 0;

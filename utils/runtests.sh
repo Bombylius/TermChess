@@ -1,11 +1,13 @@
-#!/bin/bash
+#!/bin/sh
 
-[ "$1" == "" ] || (./chess -qt < tests/$1.in > /dev/null && cmp test.out tests/$1.out > /dev/null && echo "OK" || echo "ERR")
-[ "$1" == "" ] || exit 1
+if [ -n "$1" ]; then
+    ./chess -qt < tests/$1.in > /dev/null
+    cmp test.out tests/$1.out > /dev/null && echo "OK" || echo "ERR"
+    exit 1
+fi
 
-LAST=$(ls tests | tail -n1)
-COUNT=${LAST:0:1}
-for ((i=0;i<=$COUNT;i+=1)); do
-    ./chess -qt < tests/$i.in > /dev/null
-    cmp test.out tests/$i.out > /dev/null && echo "$i OK" || echo "$i ERR"
+for i in tests/*.in; do
+    TEST=${i%.in}
+    ./chess -qt < $i > /dev/null
+    cmp test.out $TEST.out > /dev/null && printf "\033[32m${TEST:6}\n" || printf "\033[31m${TEST:6}\n"
 done
