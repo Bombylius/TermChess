@@ -60,10 +60,11 @@ int main(int argc, char** argv) {
     if (!custart) loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", &cpos);
 
     unsigned long long selection = 0;
-    int pos = -1, npos, quit = 0, drawOffered = 0, drawToClaim = 0, redraw = 1, random;
-    char prom;
+    int pos = -1, npos, quit = 0, drawOffered = 0, drawToClaim = 0, redraw = 1, random, gameResult = 0;
+    char prom, FEN[90];
     while (1) {
         if (!test && redraw) draw(cpos.board, selection, cpos.turn & reverse);
+        if (gameResult) break;
         redraw = 1, random = 0;
         if (waittime.tv_nsec) nanosleep(&waittime, NULL);
         readTerm(&npos);
@@ -76,7 +77,7 @@ int main(int argc, char** argv) {
                 drawOffered = 1;
                 break;
             case 'c':
-                if (drawOffered || drawToClaim) puts("DRAW"), quit = 1;
+                if (drawOffered || drawToClaim) gameResult = 4, quit = 1;
                 break;
             case 'r':
                 random = 1;
@@ -92,8 +93,9 @@ int main(int argc, char** argv) {
                     }
                 }
                 break;
-            case 'x':
-                printf("xd: %d\n", checkMate(&cpos));
+            case 'f':
+                getFEN(&cpos, FEN);
+                printf("%s\n", FEN);
                 redraw = 0;
                 break;
             case 'h':
@@ -103,6 +105,7 @@ int main(int argc, char** argv) {
                      "\t.o - offer draw\n"
                      "\t.c - claim draw\n"
                      "\t.r - first available move (for faster testing)\n"
+                     "\t.f - display FEN of the current position\n"
                      "\t.h - display this message");
                 redraw = 0;
             }
@@ -125,15 +128,10 @@ int main(int argc, char** argv) {
             selection = 0;
 
             if (checkMate(&cpos)) {
-                if (checkCheck(cpos.kPos[!!cpos.turn], cpos.turn, cpos.board))
-                    printf("%s WON!\n", (cpos.turn ? "WHITE" : "BLACK"));
-                else puts("STALEMATE!");
-                break;
-            }
-            if (cpos.rule50 == 150) {
-                puts("DRAW");
-                break;
-            }
+                if (checkCheck(cpos.kPos[!!cpos.turn], cpos.turn, cpos.board)) gameResult = !!cpos.turn + 1;
+                else gameResult = 3;
+            } else if (cpos.rule50 == 150) gameResult = 4;
+
             if (cpos.rule50 >= 100) drawToClaim = 1;
             else drawToClaim = 0;
             drawOffered = 0;
@@ -142,9 +140,19 @@ int main(int argc, char** argv) {
             if (test) fprintf(outTest, "%llu\n", selection);
         } else selection = 0;
     }
+    switch (gameResult) {
+        case 1:
+        case 2:
+            printf("%s WON!\n", (gameResult - 1 ? "BLACK" : "WHITE"));
+            break;
+        case 3:
+            puts("STALEMATE!");
+            break;
+        case 4:
+            puts("DRAW!");
+    }
 
-    char FEN[90];
     getFEN(&cpos, FEN);
     if (!nolog) fputc('\n', inTest);
-    if (test) fprintf(outTest, "%s\n", FEN);
+    if (test) fprintf(outTest, "%s\n%d\n", FEN, gameResult);
 }

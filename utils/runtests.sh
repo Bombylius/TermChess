@@ -8,6 +8,6 @@ fi
 
 for i in tests/*.in; do
     TEST=${i%.in}
-    ./chess -qt < $i > /dev/null
-    cmp test.out $TEST.out > /dev/null && printf "\033[32m${TEST:6}\n" || printf "\033[31m${TEST:6}\n"
+    ./chess -t < $i > /dev/null
+    cmp -s test.out $TEST.out && printf "\033[32m${TEST:6}\n" || printf "\033[31m${TEST:6}\n"
 done
