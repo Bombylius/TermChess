@@ -60,23 +60,41 @@ int main(int argc, char** argv) {
     if (!custart) loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", &cpos);
 
     unsigned long long selection = 0;
-    int pos = -1, npos, q = 0, drawOffered = 0, drawToClaim = 0, redraw = 1;
+    int pos = -1, npos, quit = 0, drawOffered = 0, drawToClaim = 0, redraw = 1, random;
     char prom;
     while (1) {
         if (!test && redraw) draw(cpos.board, selection, cpos.turn & reverse);
-        redraw = 1;
+        redraw = 1, random = 0;
         if (waittime.tv_nsec) nanosleep(&waittime, NULL);
         readTerm(&npos);
         if (npos == 64) {
             switch (command) {
             case 'q':
-                q = 1;
+                quit = 1;
                 break;
             case 'o':
                 drawOffered = 1;
                 break;
             case 'c':
-                if (drawOffered || drawToClaim) puts("DRAW"), q = 1;
+                if (drawOffered || drawToClaim) puts("DRAW"), quit = 1;
+                break;
+            case 'r':
+                random = 1;
+                for (int i = 0; i < 64; ++i) {
+                    if (cpos.board[i] && ((cpos.board[i] & C) == cpos.turn) &&
+                            (selection = possMoves(i, &cpos))) {
+                        pos = i;
+                        for (int j = 0; j < 64; ++j) if ((1ULL << j) & selection) {
+                            npos = j;
+                            break;
+                        }
+                        break;
+                    }
+                }
+                break;
+            case 'x':
+                printf("xd: %d\n", checkMate(&cpos));
+                redraw = 0;
                 break;
             case 'h':
             default:
@@ -84,14 +102,17 @@ int main(int argc, char** argv) {
                      "\t.q - quit\n"
                      "\t.o - offer draw\n"
                      "\t.c - claim draw\n"
+                     "\t.r - first available move (for faster testing)\n"
                      "\t.h - display this message");
                 redraw = 0;
             }
-            if (q) break;
-            continue;
-        } else if (ISSEL(npos)) {
+            if (quit) break;
+            if (!random) continue;
+        }
+        if (ISSEL(npos)) {
             if ((cpos.board[pos] & MOD8) == P && (npos >> 3) == (cpos.turn ? 7 : 0)) {
-                scanf(" %c", &prom);
+                if (!random) scanf(" %c", &prom);
+                else prom = 'q';
                 if (!nolog) fprintf(inTest, "%c ", prom);
                 prom = INVLETTERS[prom - 'a'];
                 if (!prom) {
@@ -100,9 +121,12 @@ int main(int argc, char** argv) {
                 }
             }
             move(pos, npos, &cpos, prom);
+            cpos.turn ^= C;
+            selection = 0;
+
             if (checkMate(&cpos)) {
                 if (checkCheck(cpos.kPos[!!cpos.turn], cpos.turn, cpos.board))
-                    printf("%s HAS WON!\n", (cpos.turn ? "WHITE" : "BLACK"));
+                    printf("%s WON!\n", (cpos.turn ? "WHITE" : "BLACK"));
                 else puts("STALEMATE!");
                 break;
             }
@@ -113,9 +137,6 @@ int main(int argc, char** argv) {
             if (cpos.rule50 >= 100) drawToClaim = 1;
             else drawToClaim = 0;
             drawOffered = 0;
-
-            cpos.turn ^= C;
-            selection = 0;
         } else if (cpos.board[npos] && (cpos.board[npos] & C) == cpos.turn) {
             selection = possMoves(pos = npos, &cpos);
             if (test) fprintf(outTest, "%llu\n", selection);

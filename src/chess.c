@@ -44,7 +44,7 @@ char checkCheck(int pos, int col, char* board) {
 
     sid = (col ? 1 : -1);
     for (int i = -1; i <= 1; i += 2)
-        if (x != (i == 1 ? 7 : 1) && y != (col ? 7 : 0) &&
+        if (x != (i == 1 ? 7 : 0) && y != (col ? 7 : 0) &&
                 (board[npos = pos + sid * 8 + i] & C) != col && (board[npos] & MOD8) == P) return 1;
 
     return 0;
