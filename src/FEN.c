@@ -1,3 +1,19 @@
+/*  Copyright (C) 2021 Ignacy Boehlke
+    This file is part of cclichess.
+
+    cclichess is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    cclichess is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with cclichess.  If not, see <https://www.gnu.org/licenses/>. */
+
 #include <stdio.h>
 #include <string.h>
 #include "FEN.h"
@@ -18,7 +34,7 @@ void getFEN(struct DataPos* pos, char* FEN) {
     for (int i = 0; i < 64; ++i) {
         if (!(i & MOD8) && i) FEN[s++] = '/';
         if (!pos->board[i]) ++empty;
-        if (empty && (pos->board[i] || (i & MOD8) == 7)) FEN[s++] = '0' + empty, empty = 0;
+        if (empty && (pos->board[i] || (i & MOD8) == 7)) FEN[s++] = '0' + (char)empty, empty = 0;
         if (pos->board[i])
             FEN[s++] = LETTERS[pos->board[i] & MOD8] + !(pos->board[i] & C) * ('A' - 'a');
     }
@@ -46,7 +62,7 @@ void loadFEN(char* FEN, struct DataPos* pos) {
     for (int i = 0; i < 64; ++i) {
         if (FEN[s] == '/') ++s;
         if ('0' < FEN[s] && FEN[s] < '9') {
-            memset(pos->board + i, 0, FEN[s] - '0');
+            memset(pos->board + i, 0, (unsigned long)(FEN[s] - '0'));
             i += FEN[s] - '1';
         } else {
             if (FEN[s] == 'k' || FEN[s] == 'K') pos->kPos[FEN[s] > 'a'] = i;

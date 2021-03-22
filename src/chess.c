@@ -1,3 +1,19 @@
+/*  Copyright (C) 2021 Ignacy Boehlke
+    This file is part of cclichess.
+
+    cclichess is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    cclichess is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with cclichess.  If not, see <https://www.gnu.org/licenses/>. */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,7 +82,7 @@ void move(int from, int to, struct DataPos* b, char prom) {
         }
         else b->enpas = -1;
         if ((tmp = (to & MOD8) - x) && !b->board[to]) b->board[from + tmp] = 0;
-        else if ((y == (b->turn ? 6 : 1))) b->board[from] = (b->board[from] & IMOD8) | prom;
+        else if (y == (b->turn ? 6 : 1)) b->board[from] = (b->board[from] & IMOD8) | prom;
         break;
     case K:
         b->kPos[!!b->turn] = to;
@@ -143,7 +159,6 @@ unsigned long long possMoves(int pos, struct DataPos* b) {
         for (npos = pos - 8; IN(npos); npos -= 8) EXP
 
         if (type == R) break;
-        __attribute__ ((fallthrough)); // suppresing gcc warning
     case B:
         npos = pos - 9; for (int i = 0; i < MIN(x, y); ++i, npos -= 9) EXP
         npos = pos - 7; for (int i = 0; i < MIN(7 - x, y); ++i, npos -= 7) EXP
@@ -169,8 +184,7 @@ unsigned long long possMoves(int pos, struct DataPos* b) {
         if (x != 7 && ((npos == b->enpas && (b->board[pos + 1] & C) != b->turn) ||
                       (b->board[npos] && (b->board[npos] & C) != b->turn))) SEL(npos);
     }
-    for (int i = 0; i < 64; ++i)
-        if (ISSEL(i) && check(type == K ? i : b->kPos[!!b->turn], pos, i, b->board)) SSEL(i);
+    FORSEL(i) if (check(type == K ? i : b->kPos[!!b->turn], pos, i, b->board)) SSEL(i);
     return selection;
 }
 

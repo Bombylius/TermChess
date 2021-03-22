@@ -1,3 +1,19 @@
+/*  Copyright (C) 2021 Ignacy Boehlke
+    This file is part of cclichess.
+
+    cclichess is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    cclichess is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with cclichess.  If not, see <https://www.gnu.org/licenses/>. */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -32,7 +48,6 @@ int main(int argc, char** argv) {
         case 't':
             test = 1;
             outTest = fopen("test.out", "w");
-            __attribute__ ((fallthrough)); // suppresing gcc warning
         case 'q':
             nolog = 1;
             break;
@@ -85,10 +100,7 @@ int main(int argc, char** argv) {
                     if (cpos.board[i] && ((cpos.board[i] & C) == cpos.turn) &&
                             (selection = possMoves(i, &cpos))) {
                         pos = i;
-                        for (int j = 0; j < 64; ++j) if ((1ULL << j) & selection) {
-                            npos = j;
-                            break;
-                        }
+                        npos = __builtin_ctzll(selection);
                         break;
                     }
                 }
