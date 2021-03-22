@@ -40,7 +40,7 @@ void readTerm(int* c) {
 
 int main(int argc, char** argv) {
     int opt;
-    while ((opt = getopt(argc, argv, "rtqhs:w:")) != -1) {
+    while ((opt = getopt(argc, argv, "rtqhs:w:v")) != -1) {
         switch (opt) {
         case 'r':
             reverse = C;
@@ -58,15 +58,23 @@ int main(int argc, char** argv) {
         case 'w':
             waittime.tv_nsec = atoi(optarg) * 1000000;
             break;
+        case 'v':
+            printf("cclichess %s\n"
+                   "Copyright (C) 2021 Ignacy Boehlke <ignacy.boehlke@protonmail.com>\n"
+                   "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
+                   "This is free software: you are free to change and redistribute it.\n"
+                   "There is NO WARRANTY, to the extent permitted by law.\n", VERSION);
+            return EXIT_SUCCESS;
         case 'h':
         default:
             puts("usage: chess [options]\n"
-                 "\th - show this message\n"
-                 "\tr - reverse the chessboard after each move\n"
-                 "\tt - output current selections to test.out and don't print boards\n"
-                 "\tq - don't write input to test.in\n"
-                 "\tw <msecs> - wait msecs miliseconds after each input\n"
-                 "\ts <FEN> - start from a different position");
+                 "\t-h - show this message\n"
+                 "\t-r - reverse the chessboard after each move\n"
+                 "\t-t - output current selections to test.out and don't print boards\n"
+                 "\t-q - don't write input to test.in\n"
+                 "\t-w <msecs> - wait msecs miliseconds after each input\n"
+                 "\t-s <FEN> - start from a different position\n"
+                 "\t-v - version, copyright and license information");
             return EXIT_FAILURE;
         }
     }
@@ -155,7 +163,7 @@ int main(int argc, char** argv) {
     switch (gameResult) {
         case 1:
         case 2:
-            printf("%s WON!\n", (gameResult - 1 ? "BLACK" : "WHITE"));
+            printf("%s WON!\n", (gameResult - 1 ? "WHITE" : "BLACK"));
             break;
         case 3:
             puts("STALEMATE!");

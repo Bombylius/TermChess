@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -std=gnu99 -Wall -Wshadow -Wextra -Wconversion -pedantic
+CFLAGS = -std=gnu99 -Wall -Wshadow -Wextra -Wconversion -pedantic -DVERSION=\"0.1\"
 
 SRC = cclichess.c chess.c draw.c FEN.c
 OBJ := $(SRC:.c=.o)
