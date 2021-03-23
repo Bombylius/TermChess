@@ -91,6 +91,10 @@ int main(int argc, char** argv) {
         redraw = 1, random = 0;
         if (waittime.tv_nsec) nanosleep(&waittime, NULL);
         readTerm(&npos);
+        if (npos == -1) {
+            redraw = 0;
+            continue;
+        }
         if (npos == 64) {
             switch (command) {
             case 'q':
@@ -144,15 +148,13 @@ int main(int argc, char** argv) {
                 }
             }
             move(pos, npos, &cpos, prom);
-            cpos.turn ^= C;
             selection = 0;
 
             if (checkMate(&cpos)) {
                 if (checkCheck(cpos.kPos[!!cpos.turn], cpos.turn, cpos.board)) gameResult = !!cpos.turn + 1;
                 else gameResult = 3;
-            } else if (cpos.rule50 == 150) gameResult = 4;
-
-            if (cpos.rule50 >= 100) drawToClaim = 1;
+            } else if (cpos.rule50 == 150 || cpos.rep == 5) gameResult = 4;
+            else if (cpos.rule50 >= 100 || cpos.rep >= 3) drawToClaim = 1;
             else drawToClaim = 0;
             drawOffered = 0;
         } else if (cpos.board[npos] && (cpos.board[npos] & C) == cpos.turn) {
@@ -171,8 +173,8 @@ int main(int argc, char** argv) {
         case 4:
             puts("DRAW!");
     }
-
     getFEN(&cpos, FEN);
+    breakSeq(&cpos);
     if (!nolog) fputc('\n', inTest);
     if (test) fprintf(outTest, "%s\n%d\n", FEN, gameResult);
 }

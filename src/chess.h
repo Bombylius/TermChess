@@ -27,11 +27,23 @@ static const char INVLETTERS[26] = {
     ['p' - 'a'] = P,
 };
 
-struct DataPos {
-    char board[64];
-    int enpas, kPos[2], castl[2][2], turn, movec, rule50;
+struct histPos {
+    char c;
+    char pos[69];
+    struct histPos* next;
 };
 
+#define HASH_SIZE 307
+struct DataPos {
+    char board[64], history[400][3];
+    struct histPos* hisHashes[HASH_SIZE];
+    int enpas, kPos[2], castl[2][2], turn, movec, rule50, rep;
+};
+
+int hashPos(struct DataPos* b);
+int cmpHPos(char* HPos, struct DataPos* b);
+struct histPos* addHis(struct DataPos* b);
+void breakSeq(struct DataPos* b);
 char checkCheck(int pos, int col, char* board);
 char check(int pos, int from, int to, char* board);
 unsigned long long possMoves(int pos, struct DataPos* b);

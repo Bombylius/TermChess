@@ -58,6 +58,8 @@ void getFEN(struct DataPos* pos, char* FEN) {
 
 void loadFEN(char* FEN, struct DataPos* pos) {   
     memset(pos->board, 0, 64);
+    for (int i = 0; i < HASH_SIZE; ++i) pos->hisHashes[i] = NULL;
+    pos->rep = 1;
     int s = 0;
     for (int i = 0; i < 64; ++i) {
         if (FEN[s] == '/') ++s;
@@ -84,4 +86,5 @@ void loadFEN(char* FEN, struct DataPos* pos) {
     if (FEN[s] != '-') pos->enpas = FEN[s] - 'a' + (8 - FEN[s + 1] + '0') * 8, s += 2;
     else pos->enpas = -1, ++s;
     sscanf(FEN + s, "%d%d", &pos->rule50, &pos->movec);
+    if (pos->enpas == -1) ++addHis(pos)->c;
 }

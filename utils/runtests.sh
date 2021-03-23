@@ -2,7 +2,7 @@
 
 if [ -n "$1" ]; then
     ./cclichess -qt < tests/$1.in > /dev/null
-    cmp test.out tests/$1.out > /dev/null && echo "OK" || echo "ERR"
+    diff test.out tests/$1.out && echo "OK" || echo "ERR"
     exit 1
 fi
 

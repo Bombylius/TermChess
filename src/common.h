@@ -20,8 +20,6 @@
 static const char C       = (1 << 3);
 static const char MOD8    = 7;
 #define ISSEL(x) !!(selection & (1ULL << (x)))
-#define FORSEL(x) unsigned long long _SEL = selection;\
-                  for (int x = __builtin_ctzll(_SEL); _SEL; x = __builtin_ctzll(_SEL ^= (1ULL << x)))
 #define IN(x) (0 <= x && x < 64)
 
 #endif

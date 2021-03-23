@@ -34,6 +34,58 @@ static const char IMOD8   = 0170;
     break;\
 }
 
+static const int pow23[69] = {23, 529, 2160, 9652, 1842, 2338, 3739, 5941, 6552, 591, 3586, 2422, 5671, 342, 7866, 792, 8209, 8681, 9530, 9043, 7849, 401, 9223, 1982, 5558, 7750, 8131, 6887, 8296, 675, 5518, 6830, 6985, 543, 2482, 7051, 2061, 7375, 9513, 8652, 8863, 3709, 5251, 689, 5840, 4229, 7204, 5580, 8256, 9762, 4372, 486, 1171, 6919, 9032, 7596, 4589, 5477, 5887, 5310, 2046, 7030, 1578, 6273, 4181, 6100, 202, 4646, 6788};
+
+int hashPos(struct DataPos* b) {
+    int hash = 0;
+    for (int i = 0; i < 64; ++i) hash = (hash + pow23[i] * b->board[i] + 1) % HASH_SIZE;
+    for (int i = 0; i < 2; ++i) for (int j = 0; j < 2; ++j)
+        hash = (hash + pow23[64 + 2 * i + j] * b->castl[i][j] + 1) % HASH_SIZE;
+    return (hash + pow23[68] * !b->turn) % HASH_SIZE;
+}
+
+int cmpHPos(char* hPos, struct DataPos* b) {
+    for (int i = 0; i < 64; ++i) if (hPos[i] != b->board[i]) return 1;
+    for (int i = 0; i < 4; ++i) if (hPos[64 + i] != b->castl[i > 1][i & 1]) return 1;
+    return hPos[68] != !!b->turn;
+}
+
+struct histPos* addHis(struct DataPos* b) {
+    int hash = hashPos(b);
+    struct histPos *ptr, *ptr2;
+    if (!b->hisHashes[hash])
+        ptr = b->hisHashes[hash] = malloc(sizeof (struct histPos));
+    else {
+        ptr = b->hisHashes[hash];
+        while (ptr && cmpHPos(ptr->pos, b)) ptr2 = ptr, ptr = ptr->next;
+        if (ptr) return ptr;
+        ptr = malloc(sizeof (struct histPos));
+        ptr2->next = ptr;
+    }
+
+    ptr->c = 0;
+    ptr->next = NULL;
+    for (int i = 0; i < 64; ++i) ptr->pos[i] = b->board[i];
+    for (int i = 0; i < 4; ++i) ptr->pos[64 + i] = (char)b->castl[i > 1][i & 1];
+    ptr->pos[68] = !!b->turn;
+    return ptr;
+}
+
+void breakSeq(struct DataPos* b) {
+    b->rule50 = -1;
+    struct histPos *ptr, *ptr2;
+    for (int i = 0; i < HASH_SIZE; ++i) {
+        ptr = b->hisHashes[i];
+        while (ptr) {
+            ptr2 = ptr;
+            ptr = ptr->next;
+            free(ptr2);
+        }
+        b->hisHashes[i] = NULL;
+    }
+    b->rep = 1;
+}
+
 char checkCheck(int pos, int col, char* board) {
     int y = pos >> 3, x = pos & MOD8, npos, sid;
 
@@ -69,18 +121,17 @@ char checkCheck(int pos, int col, char* board) {
 void move(int from, int to, struct DataPos* b, char prom) {
     int y = from >> 3, x = from & MOD8, type = b->board[from] & MOD8, tmp;
     if (b->board[from] & C) ++b->movec;
-    if (b->board[to]) b->rule50 = -1;
+    if (b->board[to]) breakSeq(b);
 
     if (to == 0 || to == 7 || to == 56 || to == 63) b->castl[!(to >> 3)][!!(to & MOD8)] = 0;
 
     switch (type) {
     case P:
-        b->rule50 = -1;
+        breakSeq(b);
         if (abs(to - from) == 16) {
             b->enpas = (to + from) >> 1;
             break;
-        }
-        else b->enpas = -1;
+        } else b->enpas = -1;
         if ((tmp = (to & MOD8) - x) && !b->board[to]) b->board[from + tmp] = 0;
         else if (y == (b->turn ? 6 : 1)) b->board[from] = (b->board[from] & IMOD8) | prom;
         break;
@@ -99,6 +150,11 @@ void move(int from, int to, struct DataPos* b, char prom) {
     b->board[to] = b->board[from];
     b->board[from] = 0;
     ++b->rule50;
+    b->history[tmp = 2 * b->movec - !b->turn][0] = (char)from;
+    b->history[tmp][1] = (char)to;
+    b->history[tmp][2] = prom;
+    b->turn ^= C;
+    if (b->enpas == -1) b->rep += (++addHis(b)->c > b->rep);
 }
 
 // We don't have to simulate the exact moves, because you can't get checked from behind the rook when castling
@@ -117,8 +173,7 @@ char check(int pos, int from, int to, char* board) {
 
 #define EXP {\
     if (b->board[npos]) {\
-        if ((b->board[npos] & C) != b->turn)\
-            SEL(npos);\
+        if ((b->board[npos] & C) != b->turn) SEL(npos);\
         break;\
     }\
     SEL(npos);\
@@ -184,7 +239,11 @@ unsigned long long possMoves(int pos, struct DataPos* b) {
         if (x != 7 && ((npos == b->enpas && (b->board[pos + 1] & C) != b->turn) ||
                       (b->board[npos] && (b->board[npos] & C) != b->turn))) SEL(npos);
     }
-    FORSEL(i) if (check(type == K ? i : b->kPos[!!b->turn], pos, i, b->board)) SSEL(i);
+    unsigned long long sel = selection;
+    while (sel) {
+        sel ^= (1ULL << (tmp = __builtin_ctzll(sel)));
+        if (check(type == K ? tmp : b->kPos[!!b->turn], pos, tmp, b->board)) SSEL(tmp);
+    }
     return selection;
 }
 

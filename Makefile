@@ -10,7 +10,8 @@ all: cclichess
 safe: CFLAGS += -DSAFE
 safe: all
 
-debug: CFLAGS += -ggdb3 #-fsanitize=address,undefined
+debug: CFLAGS += -ggdb3 -fsanitize=address,undefined
+debug: LDFLAGS += -fsanitize=address,undefined
 debug: cclichess
 
 VPATH=src
