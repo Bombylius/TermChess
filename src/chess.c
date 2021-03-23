@@ -179,9 +179,9 @@ char check(int pos, int from, int to, char* board) {
     SEL(npos);\
 }
 
-unsigned long long possMoves(int pos, struct DataPos* b) {
+u64 possMoves(int pos, struct DataPos* b) {
     int x = pos & MOD8, y = pos >> 3, npos, sid, type, tmp;
-    unsigned long long selection = 0;
+    u64 selection = 0;
     switch (type = b->board[pos] & MOD8) {
     case K:
         for (int a = -1; a <= 1; ++a) for (int bb = -1; bb <= 1; ++bb)
@@ -239,7 +239,7 @@ unsigned long long possMoves(int pos, struct DataPos* b) {
         if (x != 7 && ((npos == b->enpas && (b->board[pos + 1] & C) != b->turn) ||
                       (b->board[npos] && (b->board[npos] & C) != b->turn))) SEL(npos);
     }
-    unsigned long long sel = selection;
+    u64 sel = selection;
     while (sel) {
         sel ^= (1ULL << (tmp = __builtin_ctzll(sel)));
         if (check(type == K ? tmp : b->kPos[!!b->turn], pos, tmp, b->board)) SSEL(tmp);

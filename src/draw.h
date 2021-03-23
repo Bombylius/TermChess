@@ -19,6 +19,6 @@
 
 #include "common.h"
 
-void draw(char* board, unsigned long long selection, int reversed);
+void draw(char* board, u64 selection, int reversed);
 
 #endif

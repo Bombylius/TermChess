@@ -44,7 +44,7 @@ static const char* FI_BL  = "\033[38;5;237m";
 
 static const char* CL     = "\033[0m";
 
-void draw(char* board, unsigned long long selection, int reversed) {
+void draw(char* board, u64 selection, int reversed) {
     reversed = !!reversed;
     int p;
     fputs("\033[f", stdout);

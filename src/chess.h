@@ -17,6 +17,8 @@
 #ifndef CHESS_H
 #define CHESS_H
 
+#include "common.h"
+
 enum {K = 1, Q, R, B, N, P};
 static const char INVLETTERS[26] = {
     ['k' - 'a'] = K,
@@ -46,7 +48,7 @@ struct histPos* addHis(struct DataPos* b);
 void breakSeq(struct DataPos* b);
 char checkCheck(int pos, int col, char* board);
 char check(int pos, int from, int to, char* board);
-unsigned long long possMoves(int pos, struct DataPos* b);
+u64 possMoves(int pos, struct DataPos* b);
 char checkMate(struct DataPos* b);
 void move(int from, int to, struct DataPos* b, char prom);
 

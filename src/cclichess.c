@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     if (!test) printf("\033[2J");
     if (!custart) loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", &cpos);
 
-    unsigned long long selection = 0;
+    u64 selection = 0;
     int pos = -1, npos, quit = 0, drawOffered = 0, drawToClaim = 0, redraw = 1, random, gameResult = 0;
     char prom, FEN[90];
     while (1) {
