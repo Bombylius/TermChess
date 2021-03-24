@@ -59,6 +59,7 @@ void getFEN(struct DataPos* pos, char* FEN) {
 void loadFEN(char* FEN, struct DataPos* pos) {   
     memset(pos->board, 0, 64);
     for (int i = 0; i < HASH_SIZE; ++i) pos->hisHashes[i] = NULL;
+    pos->posC = 0;
     pos->rep = 1;
     int s = 0;
     for (int i = 0; i < 64; ++i) {

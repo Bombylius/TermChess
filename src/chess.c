@@ -62,7 +62,8 @@ struct histPos* addHis(struct DataPos* b) {
         ptr = malloc(sizeof (struct histPos));
         ptr2->next = ptr;
     }
-
+    b->lastPos[b->posC] = ptr;
+    b->lastHash[b->posC++] = hash;
     ptr->c = 0;
     ptr->next = NULL;
     for (int i = 0; i < 64; ++i) ptr->pos[i] = b->board[i];
@@ -72,17 +73,12 @@ struct histPos* addHis(struct DataPos* b) {
 }
 
 void breakSeq(struct DataPos* b) {
-    b->rule50 = -1;
-    struct histPos *ptr, *ptr2;
-    for (int i = 0; i < HASH_SIZE; ++i) {
-        ptr = b->hisHashes[i];
-        while (ptr) {
-            ptr2 = ptr;
-            ptr = ptr->next;
-            free(ptr2);
-        }
-        b->hisHashes[i] = NULL;
+    for (int i = 0; i < b->posC; ++i) {
+        free(b->lastPos[i]);
+        b->hisHashes[b->lastHash[i]] = NULL;
     }
+    b->rule50 = -1;
+    b->posC = 0;
     b->rep = 1;
 }
 

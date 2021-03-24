@@ -38,8 +38,8 @@ struct histPos {
 #define HASH_SIZE 307
 struct DataPos {
     char board[64], history[400][3];
-    struct histPos* hisHashes[HASH_SIZE];
-    int enpas, kPos[2], castl[2][2], turn, movec, rule50, rep;
+    struct histPos *hisHashes[HASH_SIZE], *lastPos[151];
+    int enpas, kPos[2], castl[2][2], turn, movec, rule50, rep, posC, lastHash[151];
 };
 
 int hashPos(struct DataPos* b);
