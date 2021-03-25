@@ -16,15 +16,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <getopt.h>
 #include <time.h>
 #include "common.h"
-#include "FEN.h"
+#include "notation.h"
 #include "chess.h"
 #include "draw.h"
 
 FILE *inTest, *outTest;
 int test, nolog, reverse, custart;
+char startPos[90];
 struct timespec waittime = {.tv_sec = 0};
 struct DataPos cpos;
 
@@ -52,6 +54,7 @@ int main(int argc, char** argv) {
             nolog = 1;
             break;
         case 's':
+            strcpy(startPos, optarg);
             loadFEN(optarg, &cpos);
             custart = 1;
             break;
@@ -74,7 +77,8 @@ int main(int argc, char** argv) {
                  "\t-q - don't write input to test.in\n"
                  "\t-w <msecs> - wait msecs miliseconds after each input\n"
                  "\t-s <FEN> - start from a different position\n"
-                 "\t-v - version, copyright and license information");
+                 "\t-v - version, copyright and license information\n"
+                 "to check in-game commands type \".h\"");
             return EXIT_FAILURE;
         }
     }
@@ -83,8 +87,8 @@ int main(int argc, char** argv) {
     if (!custart) loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", &cpos);
 
     u64 selection = 0;
-    int pos = -1, npos, quit = 0, drawOffered = 0, drawToClaim = 0, redraw = 1, random, gameResult = 0;
-    char prom, FEN[90];
+    int pos = -1, npos, quit = 0, drawOffered = 0, drawToClaim = 0, redraw = 1, random, gameResult = UNDECIDED;
+    char prom, buf[1000];
     while (1) {
         if (!test && redraw) draw(cpos.board, selection, cpos.turn & reverse);
         if (gameResult) break;
@@ -104,22 +108,11 @@ int main(int argc, char** argv) {
                 drawOffered = 1;
                 break;
             case 'c':
-                if (drawOffered || drawToClaim) gameResult = 4, quit = 1;
-                break;
-            case 'r':
-                random = 1;
-                for (int i = 0; i < 64; ++i) {
-                    if (cpos.board[i] && ((cpos.board[i] & C) == cpos.turn) &&
-                            (selection = possMoves(i, &cpos))) {
-                        pos = i;
-                        npos = __builtin_ctzll(selection);
-                        break;
-                    }
-                }
+                if (drawOffered || drawToClaim) gameResult = DRAW, quit = 1;
                 break;
             case 'f':
-                getFEN(&cpos, FEN);
-                printf("%s\n", FEN);
+                getFEN(&cpos, buf);
+                printf("%s\n", buf);
                 redraw = 0;
                 break;
             case 'h':
@@ -128,7 +121,6 @@ int main(int argc, char** argv) {
                      "\t.q - quit\n"
                      "\t.o - offer draw\n"
                      "\t.c - claim draw\n"
-                     "\t.r - first available move (for faster testing)\n"
                      "\t.f - display FEN of the current position\n"
                      "\t.h - display this message");
                 redraw = 0;
@@ -152,8 +144,8 @@ int main(int argc, char** argv) {
 
             if (checkMate(&cpos)) {
                 if (checkCheck(cpos.kPos[!!cpos.turn], cpos.turn, cpos.board)) gameResult = !!cpos.turn + 1;
-                else gameResult = 3;
-            } else if (cpos.rule50 == 150 || cpos.rep == 5) gameResult = 4;
+                else gameResult = STALEMATE;
+            } else if (cpos.rule50 == 150 || cpos.rep == 5) gameResult = DRAW;
             else if (cpos.rule50 >= 100 || cpos.rep >= 3) drawToClaim = 1;
             else drawToClaim = 0;
             drawOffered = 0;
@@ -163,18 +155,25 @@ int main(int argc, char** argv) {
         } else selection = 0;
     }
     switch (gameResult) {
-        case 1:
-        case 2:
+        case WHITE_WON:
+        case BLACK_WON:
             printf("%s WON!\n", (gameResult - 1 ? "WHITE" : "BLACK"));
             break;
-        case 3:
+        case STALEMATE:
             puts("STALEMATE!");
             break;
-        case 4:
+        case DRAW:
             puts("DRAW!");
     }
-    getFEN(&cpos, FEN);
-    breakSeq(&cpos);
+    if (!test) {
+        getPGN(buf, cpos.pHis, gameResult, custart ? startPos : NULL);
+        printf("%s\n", buf);
+    }
+    if (test || !gameResult) {
+        getFEN(&cpos, buf);
+        if (test) fprintf(outTest, "%s\n%d\n", buf, gameResult);
+        else printf("\nLaunch cclichess with option -s\"%s\" to continue\n", buf);
+    }
     if (!nolog) fputc('\n', inTest);
-    if (test) fprintf(outTest, "%s\n%d\n", FEN, gameResult);
+    breakSeq(&cpos);
 }

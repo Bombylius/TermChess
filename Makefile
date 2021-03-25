@@ -1,7 +1,7 @@
 CC = clang
-CFLAGS = -std=gnu99 -Wall -Wshadow -Wextra -Wconversion -pedantic -DVERSION=\"0.1\"
+CFLAGS = -std=gnu99 -Wall -Wshadow -Wextra -Wconversion -pedantic -DVERSION=\"0.2\"
 
-SRC = cclichess.c chess.c draw.c FEN.c
+SRC = cclichess.c chess.c draw.c notation.c
 OBJ := $(SRC:.c=.o)
 
 all: CFLAGS += -O2
@@ -15,10 +15,10 @@ debug: LDFLAGS += -fsanitize=address,undefined
 debug: cclichess
 
 VPATH=src
-FEN.o: FEN.c FEN.h chess.h common.h
+FEN.o: notation.c notation.h chess.h common.h
 chess.o: chess.c chess.h common.h
 draw.o: draw.c draw.h common.h
-main.o: draw.h chess.h common.h FEN.h
+main.o: draw.h chess.h common.h notation.h
 
 $(OBJ): Makefile
 cclichess: $(OBJ)

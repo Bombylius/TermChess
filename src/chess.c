@@ -114,12 +114,27 @@ char checkCheck(int pos, int col, char* board) {
     return 0;
 }
 
+#define AMBI b->board[tmp] == b->board[from] && from != tmp && possMoves(tmp, b) & (1ULL << to)
 void move(int from, int to, struct DataPos* b, char prom) {
-    int y = from >> 3, x = from & MOD8, type = b->board[from] & MOD8, tmp;
+    int y = from >> 3, x = from & MOD8, type = b->board[from] & MOD8, tmp, ply = 2 * b->movec - !b->turn - 1, k = 0;
     if (b->board[from] & C) ++b->movec;
-    if (b->board[to]) breakSeq(b);
-
     if (to == 0 || to == 7 || to == 56 || to == 63) b->castl[!(to >> 3)][!!(to & MOD8)] = 0;
+
+    if (type != P) b->pHis[ply][k++] = LETTERS[type] + 'A' - 'a';
+    else if ((to - from) & 1) b->pHis[ply][k++] = (char)x + 'a';
+    else {
+        for (tmp = y * 8; tmp < (y + 1) * 8; ++tmp) if (AMBI) {
+            b->pHis[ply][k++] = (char)x + 'a';
+            break;
+        }
+    }
+    for (tmp = x; tmp < 64; tmp += 8) if (AMBI) {
+        b->pHis[ply][k++] = '8' - (char)y;
+        break;
+    }
+    if (b->board[to] || b->enpas == to) b->pHis[ply][k++] = 'x', breakSeq(b);
+    b->pHis[ply][k++] = (char)(to & MOD8) + 'a';
+    b->pHis[ply][k++] = '8' - (char)(to >> 3);
 
     switch (type) {
     case P:
@@ -129,14 +144,23 @@ void move(int from, int to, struct DataPos* b, char prom) {
             break;
         } else b->enpas = -1;
         if ((tmp = (to & MOD8) - x) && !b->board[to]) b->board[from + tmp] = 0;
-        else if (y == (b->turn ? 6 : 1)) b->board[from] = (b->board[from] & IMOD8) | prom;
+        else if (y == (b->turn ? 6 : 1)) {
+            b->board[from] = (b->board[from] & IMOD8) | prom;
+            b->pHis[ply][k++] = '=';
+            b->pHis[ply][k++] = LETTERS[(int)prom] + 'A' - 'a';
+        }
         break;
     case K:
         b->kPos[!!b->turn] = to;
         b->castl[!!b->turn][0] = b->castl[!!b->turn][1] = 0;
         if (abs(tmp = to - from) == 2) {
-            if (tmp > 0) b->board[to - 1] = b->board[y * 8 + 7], b->board[y * 8 + 7] = 0;
-            else b->board[to + 1] = b->board[y * 8], b->board[y * 8] = 0;
+            if (tmp > 0) {
+                b->board[to - 1] = b->board[y * 8 + 7], b->board[y * 8 + 7] = 0;
+                memcpy(b->pHis[ply], "O-O", k = 3);
+            } else {
+                b->board[to + 1] = b->board[y * 8], b->board[y * 8] = 0;
+                memcpy(b->pHis[ply], "O-O-O", k = 5);
+            }
         }
         break;
     case R:
@@ -145,10 +169,9 @@ void move(int from, int to, struct DataPos* b, char prom) {
     if (type != P) b->enpas = -1;
     b->board[to] = b->board[from];
     b->board[from] = 0;
+
+    if (checkCheck(b->kPos[!b->turn], b->turn ^ C, b->board)) b->pHis[ply][k++] = '+';
     ++b->rule50;
-    b->history[tmp = 2 * b->movec - !b->turn][0] = (char)from;
-    b->history[tmp][1] = (char)to;
-    b->history[tmp][2] = prom;
     b->turn ^= C;
     if (b->enpas == -1) b->rep += (++addHis(b)->c > b->rep);
 }

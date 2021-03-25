@@ -18,6 +18,7 @@
 #define FEN_H
 #include "chess.h"
 
+void getPGN(char* str, char his[][8], int result, char* startPos);
 void getFEN(struct DataPos* pos, char* FEN);
 void loadFEN(char* FEN, struct DataPos* pos);
 

@@ -16,18 +16,30 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "FEN.h"
+#include "notation.h"
 #include "chess.h"
 #include "common.h"
 
-static const char LETTERS[7] = {
-    [K] = 'k',
-    [Q] = 'q',
-    [R] = 'r',
-    [B] = 'b',
-    [N] = 'n',
-    [P] = 'p',
-};
+void getPGN(char* str, char his[][8], int result, char* startPos) {
+    int i = -1, k = 0;
+    while (!his[++i][0]) {};
+    char res[8];
+    if (!result) sprintf(res, "*");
+    else if (result <= 2) sprintf(res, "%d-%d", !!(result - 1), !(result - 1));
+    else sprintf(res, "1/2-1/2");
+
+    k += sprintf(str + k, "[Result \"%s\"]\n", res);
+    if (startPos) k += sprintf(str + k, "[FEN \"%s\"]\n[SetUp \"1\"]\n", startPos);
+    k += sprintf(str + k, "\n");
+    if (i & 1) k += sprintf(str + k, "%d. ... %s ", (i >> 1) + 1, his[i]), ++i;
+    for (; i < 400 && his[i][0]; i += 2)
+        k += sprintf(str + k, "%d. %s %s ", (i >> 1) + 1, his[i], his[i + 1]);
+
+    if (!result) return;
+    if (!his[i - 1][0]) --k;
+    if (result <= 2) str[k - 2] = '#';
+    sprintf(str + k, "%s", res);
+}
 
 void getFEN(struct DataPos* pos, char* FEN) {
     int s = 0, empty = 0;
@@ -58,6 +70,7 @@ void getFEN(struct DataPos* pos, char* FEN) {
 
 void loadFEN(char* FEN, struct DataPos* pos) {   
     memset(pos->board, 0, 64);
+    memset(pos->pHis, '\0', sizeof pos->pHis);
     for (int i = 0; i < HASH_SIZE; ++i) pos->hisHashes[i] = NULL;
     pos->posC = 0;
     pos->rep = 1;

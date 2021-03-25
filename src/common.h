@@ -22,5 +22,4 @@ static const char MOD8    = 7;
 #define ISSEL(x) !!(selection & (1ULL << (x)))
 #define IN(x) (0 <= x && x < 64)
 typedef unsigned long long u64;
-
 #endif

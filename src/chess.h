@@ -20,6 +20,15 @@
 #include "common.h"
 
 enum {K = 1, Q, R, B, N, P};
+enum {UNDECIDED, WHITE_WON, BLACK_WON, STALEMATE, DRAW};
+static const char LETTERS[7] = {
+    [K] = 'k',
+    [Q] = 'q',
+    [R] = 'r',
+    [B] = 'b',
+    [N] = 'n',
+    [P] = 'p',
+};
 static const char INVLETTERS[26] = {
     ['k' - 'a'] = K,
     ['q' - 'a'] = Q,
@@ -37,7 +46,7 @@ struct histPos {
 
 #define HASH_SIZE 307
 struct DataPos {
-    char board[64], history[400][3];
+    char board[64], pHis[400][8];
     struct histPos *hisHashes[HASH_SIZE], *lastPos[151];
     int enpas, kPos[2], castl[2][2], turn, movec, rule50, rep, posC, lastHash[151];
 };
