@@ -1,5 +1,5 @@
 *.o
 test.in
 test.out
-cclichess
+TermChess
 other/

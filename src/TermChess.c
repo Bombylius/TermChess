@@ -1,18 +1,18 @@
 /*  Copyright (C) 2021 Ignacy Boehlke
-    This file is part of cclichess.
+    This file is part of TermChess.
 
-    cclichess is free software: you can redistribute it and/or modify
+    TermChess is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    cclichess is distributed in the hope that it will be useful,
+    TermChess is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with cclichess.  If not, see <https://www.gnu.org/licenses/>. */
+    along with TermChess.  If not, see <https://www.gnu.org/licenses/>. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
             waittime.tv_nsec = atoi(optarg) * 1000000;
             break;
         case 'v':
-            printf("cclichess %s\n"
+            printf("TermChess %s\n"
                    "Copyright (C) 2021 Ignacy Boehlke <ignacy.boehlke@protonmail.com>\n"
                    "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
                    "This is free software: you are free to change and redistribute it.\n"
@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
     if (test || !gameResult) {
         getFEN(&cpos, buf);
         if (test) fprintf(outTest, "%s\n%d\n", buf, gameResult);
-        else printf("\nLaunch cclichess with option -s\"%s\" to continue\n", buf);
+        else printf("\nLaunch TermChess with option -s\"%s\" to continue\n", buf);
     }
     if (!nolog) fputc('\n', inTest);
     breakSeq(&cpos);

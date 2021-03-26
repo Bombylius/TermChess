@@ -1,11 +1,12 @@
+NAME = TermChess
 CC = clang
 CFLAGS = -std=gnu99 -Wall -Wshadow -Wextra -Wconversion -pedantic -DVERSION=\"0.2\"
 
-SRC = cclichess.c chess.c draw.c notation.c
+SRC = $(NAME).c chess.c draw.c notation.c
 OBJ := $(SRC:.c=.o)
 
 all: CFLAGS += -O2
-all: cclichess
+all: $(NAME)
 
 safe: CFLAGS += -DSAFE
 safe: all
@@ -21,7 +22,7 @@ draw.o: draw.c draw.h common.h
 main.o: draw.h chess.h common.h notation.h
 
 $(OBJ): Makefile
-cclichess: $(OBJ)
+$(NAME): $(OBJ)
 
 clean:
 	rm -f $(OBJ) test.in test.out
