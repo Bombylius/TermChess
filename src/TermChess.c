@@ -58,9 +58,12 @@ int main(int argc, char** argv) {
             loadFEN(optarg, &cpos);
             custart = 1;
             break;
-        case 'w':
-            waittime.tv_nsec = atoi(optarg) * 1000000;
+        case 'w': {
+            int miliseconds = atoi(optarg);
+            waittime.tv_sec = miliseconds / 1000;
+            waittime.tv_nsec = (miliseconds % 1000) * 1000000;
             break;
+        }
         case 'v':
             printf("TermChess %s\n"
                    "Copyright (C) 2021 Ignacy Boehlke <ignacy.boehlke@protonmail.com>\n"
